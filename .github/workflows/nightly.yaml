@@ -37,6 +37,9 @@ jobs:
         env:
           HUSKY: '0'
 
+      - name: 🏗️ Build workspace (deps for CLI)
+        run: pnpm turbo run build --filter="!@likec4/docs-astro" --filter="!@likec4/playground"
+
       - name: 🏗️ Build CLI and pack
         run: |
           cd packages/likec4
