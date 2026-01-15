@@ -1,0 +1,64 @@
+name: nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Manual nightly build (artifact only)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  NODE_ENV: production
+  FORCE_COLOR: true
+  DO_NOT_TRACK: '1'
+
+jobs:
+  build-and-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: 🛠️ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: 🏗️ Build CLI and pack
+        run: |
+          cd packages/likec4
+          NODE_ENV=production pnpm run build-cli
+          pnpm exec likec4ops prepack
+          pnpm pack
+
+      - name: ⬆️ Upload CLI tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: likec4-nightly-${{ github.sha }}
+          path: packages/likec4/likec4-*.tgz
+
+      # Publishing to npm is intentionally disabled for safety.
+      # To enable in this fork, add an NPM_TOKEN secret and remove the "if: false" guard.
+      # - name: 🚫 Publish (disabled)
+      #   if: false
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #   run: |
+      #     cd packages/likec4
+      #     npm version prerelease --preid=nightly --no-git-tag-version
+      #     npm publish --tag next
