@@ -9,7 +9,7 @@ on:
         default: ''
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   NODE_ENV: production
@@ -52,6 +52,35 @@ jobs:
         with:
           name: likec4-nightly-${{ github.sha }}
           path: packages/likec4/likec4-*.tgz
+
+      # Publish a Release asset in this fork (no npm publish).
+      - name: 📌 Prepare release metadata
+        if: github.repository_owner == 'ckeller42'
+        run: |
+          echo "TAG=nightly-${GITHUB_SHA}" >> "$GITHUB_ENV"
+          ASSET_PATH=$(ls packages/likec4/likec4-*.tgz)
+          echo "ASSET_PATH=${ASSET_PATH}" >> "$GITHUB_ENV"
+          echo "ASSET_NAME=$(basename "${ASSET_PATH}")" >> "$GITHUB_ENV"
+
+      - name: 🧾 Create release
+        if: github.repository_owner == 'ckeller42'
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          release_name: Nightly ${{ env.TAG }}
+          draft: false
+          prerelease: true
+          body: "Nightly build for commit ${{ github.sha }} (artifact-only)."
+
+      - name: 📤 Upload release asset
+        if: github.repository_owner == 'ckeller42'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.ASSET_PATH }}
+          asset_name: ${{ env.ASSET_NAME }}
+          asset_content_type: application/gzip
 
       # Publishing to npm is intentionally disabled for safety.
       # To enable in this fork, add an NPM_TOKEN secret and remove the "if: false" guard.
