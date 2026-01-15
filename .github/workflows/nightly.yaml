@@ -67,6 +67,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.TAG }}
           release_name: Nightly ${{ env.TAG }}
           draft: false
