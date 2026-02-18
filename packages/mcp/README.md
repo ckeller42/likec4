@@ -52,12 +52,18 @@ OPTIONS
 ## Available tools
 
 - `list-projects`: List all LikeC4 projects in the workspace.
-- `read-project-summary`: Project specification (element kinds, deployment node kinds, tags, metadata keys), all elements, deployment nodes and views.
+- `read-project-summary`: Project specification, configuration, all elements, deployment nodes and views.
 - `search-element`: Search elements and deployment nodes across all projects by id/title/kind/shape/tags/metadata.
 - `read-element`: Full element details including relationships, includedInViews, deployedInstances, metadata and sourceLocation.
 - `read-deployment`: Details of a deployment node or deployed instance.
 - `read-view`: Full view details (nodes/edges) and sourceLocation.
 - `find-relationships`: Direct and indirect relationships between two elements in a project.
+- `query-graph`: Query element hierarchy (ancestors, descendants, siblings, children, parent) and relationships (incomers, outgoers).
+- `query-incomers-graph`: Get complete graph of all upstream dependencies/producers (recursive incomers).
+- `query-outgoers-graph`: Get complete graph of all downstream consumers/dependents (recursive outgoers).
+- `query-by-metadata`: Search elements and deployment nodes by metadata key-value pairs with exact/contains/exists matching.
+- `query-by-tags`: Search elements and deployment nodes by tags with boolean logic (allOf, anyOf, noneOf).
+- `find-relationship-paths`: Discover all relationship chains between two elements with bounded BFS traversal.
 - `open-view`: Opens the LikeC4 view (available if MCP is running in the editor)
 
 ## Getting help

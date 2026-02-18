@@ -1,12 +1,25 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2023-2026 Denis Davydkov
+// Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+//
+// Portions of this file have been modified by NVIDIA CORPORATION & AFFILIATES.
+
 import { loggable } from '@likec4/log'
 import type { ServerOptions } from '@modelcontextprotocol/sdk/server/index.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import packageJson from '../../../package.json' with { type: 'json' }
 import { logger } from '../../logger'
 import type { LikeC4Services } from '../../module'
+import { findRelationshipPaths } from '../tools/find-relationship-paths'
 import { findRelationships } from '../tools/find-relationships'
 import { listProjects } from '../tools/list-projects'
 import { openView } from '../tools/open-view'
+import { queryByMetadata } from '../tools/query-by-metadata'
+import { queryByTags } from '../tools/query-by-tags'
+import { queryGraph } from '../tools/query-graph'
+import { queryIncomersGraph } from '../tools/query-incomers-graph'
+import { queryOutgoersGraph } from '../tools/query-outgoers-graph'
 import { readDeployment } from '../tools/read-deployment'
 import { readElement } from '../tools/read-element'
 import { readProjectSummary } from '../tools/read-project-summary'
@@ -33,12 +46,18 @@ Conventions:
 
 Available tools:
 - list-projects — List all LikeC4 projects in the workspace.
-- read-project-summary — Project specification (element kinds, deployment node kinds, tags, metadata keys), all elements, deployment nodes and views. Input: { project? }.
+- read-project-summary — Project specification, configuration, all elements, deployment nodes and views. Input: { project? }.
 - search-element — Search elements and deployment nodes across all projects by id/title/kind/shape/tags/metadata. Input: { search }.
 - read-element — Full element details including relationships, includedInViews, deployedInstances, metadata and sourceLocation. Input: { id, project? }.
 - read-deployment — Details of a deployment node or deployed instance. Input: { id, project? }.
 - read-view — Full view details (nodes/edges) and sourceLocation. Input: { viewId, project? }.
 - find-relationships — Direct and indirect relationships between two elements in a project. Input: { element1, element2, project? }.
+- query-graph — Query element hierarchy (ancestors, descendants, siblings, children, parent) and relationships (incomers, outgoers). Input: { elementId, queryType, includeIndirect?, project? }.
+- query-incomers-graph — Get complete graph of all upstream dependencies/producers (recursive incomers). Much more efficient than repeated query-graph calls. Input: { elementId, includeIndirect?, maxDepth?, project? }.
+- query-outgoers-graph — Get complete graph of all downstream consumers/dependents (recursive outgoers). Much more efficient than repeated query-graph calls. Input: { elementId, includeIndirect?, maxDepth?, project? }.
+- query-by-metadata — Search elements by metadata key-value pairs with exact/contains/exists matching. Input: { key, value?, matchMode?, project? }.
+- query-by-tags — Advanced tag filtering with boolean logic (allOf, anyOf, noneOf). Input: { allOf?, anyOf?, noneOf?, project? }.
+- find-relationship-paths — Discover all paths (chains of relationships) between two elements with BFS traversal. Input: { sourceId, targetId, maxDepth?, project? }.
 ${
         isInEditor
           ? '- open-view — Opens the LikeC4 view panel in the editor. Triggers UI; at most one preview panel at a time. Input: { viewId, project? }.'
@@ -69,6 +88,12 @@ Full documentation: https://likec4.dev/llms-full.txt
     mcp.registerTool(...readView(this.services.likec4.LanguageServices))
     mcp.registerTool(...searchElement(this.services.likec4.LanguageServices))
     mcp.registerTool(...findRelationships(this.services.likec4.LanguageServices))
+    mcp.registerTool(...queryGraph(this.services.likec4.LanguageServices))
+    mcp.registerTool(...queryIncomersGraph(this.services.likec4.LanguageServices))
+    mcp.registerTool(...queryOutgoersGraph(this.services.likec4.LanguageServices))
+    mcp.registerTool(...queryByMetadata(this.services.likec4.LanguageServices))
+    mcp.registerTool(...queryByTags(this.services.likec4.LanguageServices))
+    mcp.registerTool(...findRelationshipPaths(this.services.likec4.LanguageServices))
     if (isInEditor) {
       mcp.registerTool(...openView(this.services.likec4.LanguageServices))
     }
